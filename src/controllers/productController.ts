@@ -5,18 +5,36 @@ import { Product } from '../models/product';
 const productsCollection = db.collection('products');
 
 /**
- * Obtiene una lista paginada de todos los productos disponibles para la venta.
+ * Obtiene una lista de productos con filtros opcionales.
  * Esta ruta es pública y no requiere autenticación.
  */
 export const listAllProducts = async (req: Request, res: Response) => {
     try {
+        const { search, category } = req.query;
+        
         const snapshot = await productsCollection.get();
         
         if (snapshot.empty) {
             return res.status(200).json({ success: true, data: [] });
         }
 
-        const products: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        let products: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        
+        // Filtrar solo productos activos
+        products = products.filter(p => p.isActive);
+        
+        // Aplicar filtros
+        if (search) {
+            const searchTerm = search.toString().toLowerCase();
+            products = products.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) ||
+                p.description.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        if (category) {
+            products = products.filter(p => p.category === category);
+        }
         
         res.status(200).json({ success: true, data: products });
     } catch (error) {

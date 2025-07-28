@@ -23,7 +23,16 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middlewares de seguridad y utilidad
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',  // Vite dev server
+    'http://localhost:3000',  // Posible alternativa
+    'http://localhost:5000'   // Posible puerto alternativo
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(helmet());
 app.use(express.json());
 app.use(logger);

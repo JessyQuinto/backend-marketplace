@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from '../types/express';
 import { db } from '../config/firebase';
 import { CreateProductDto, UpdateProductDto } from '../validators/product.validator';
 import { Product } from '../models/product';
+import { Order } from '../models/order';
 
 const productsCollection = db.collection('products');
 const ordersCollection = db.collection('orders');
@@ -28,6 +29,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
     const newProduct: Omit<Product, 'id'> = {
         ...productData,
         sellerId,
+        isActive: true, // Los productos se crean activos por defecto
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     };
@@ -72,7 +74,7 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
         // Firestore no puede filtrar el sub-array en el servidor, por lo que lo hacemos en el cliente.
         // Esto es una limitación conocida. La consulta anterior es un pre-filtrado.
         const sellerOrders = snapshot.docs.map(doc => {
-            const order = { id: doc.id, ...doc.data() };
+            const order = { id: doc.id, ...doc.data() } as Order;
             // Filtramos los items para devolver solo los que pertenecen a este vendedor.
             order.items = order.items.filter(item => item.sellerId === sellerId);
             return order;

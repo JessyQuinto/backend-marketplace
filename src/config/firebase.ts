@@ -2,22 +2,30 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { credential } from 'firebase-admin';
-
-// Import the service account key from the JSON file
-import serviceAccount from './serviceAccountKey.json';
+import * as path from 'path';
+import * as fs from 'fs';
 
 let db: Firestore | null = null;
 let auth: Auth | null = null;
 
-// Initialize Firebase Admin SDK using the local service account key
+// Initialize Firebase Admin SDK
 if (!getApps().length) {
-    console.log('Initializing Firebase Admin SDK with local service account key...');
-    initializeApp({
-        // Use credential.cert with the imported service account
-        credential: credential.cert(serviceAccount as any),
-        // Optionally, you can specify the database URL if it's not detected automatically
-        // databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
-    });
+    console.log('Initializing Firebase Admin SDK...');
+    
+    // Try to load service account key
+    const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+    
+    if (fs.existsSync(serviceAccountPath)) {
+        console.log('Using local service account key...');
+        const serviceAccount = require('./serviceAccountKey.json');
+        initializeApp({
+            credential: credential.cert(serviceAccount),
+        });
+    } else {
+        console.log('No service account key found. Using default credentials or environment variables...');
+        // This will work if GOOGLE_APPLICATION_CREDENTIALS is set or in cloud environments
+        initializeApp();
+    }
     db = getFirestore();
     auth = getAuth();
     console.log('Firebase Admin SDK initialized successfully.');

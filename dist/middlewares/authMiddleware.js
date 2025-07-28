@@ -21,13 +21,21 @@ const authMiddleware = async (req, res, next) => {
     const token = authorization.split('Bearer ')[1];
     try {
         const decodedToken = await firebase_1.auth.verifyIdToken(token);
-        const userDoc = await firebase_1.db.collection('users').doc(decodedToken.uid).get();
+        let userDoc = await firebase_1.db.collection('users').doc(decodedToken.uid).get();
         if (!userDoc.exists) {
-            return res.status(404).json({
-                success: false,
-                error: 'Usuario no encontrado.',
-                code: 'USER_NOT_FOUND'
-            });
+            // Crear perfil de usuario automáticamente si no existe
+            const newUserProfile = {
+                id: decodedToken.uid,
+                email: decodedToken.email || '',
+                name: decodedToken.name || decodedToken.email?.split('@')[0] || 'Usuario',
+                role: 'buyer',
+                isApproved: true, // Los buyers se aprueban automáticamente
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            await firebase_1.db.collection('users').doc(decodedToken.uid).set(newUserProfile);
+            // Refrescar el documento para obtener los datos recién creados
+            userDoc = await firebase_1.db.collection('users').doc(decodedToken.uid).get();
         }
         req.user = {
             id: userDoc.id,

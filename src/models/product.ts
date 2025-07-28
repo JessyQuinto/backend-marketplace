@@ -7,6 +7,8 @@ export interface Product {
   stock: number;
   category: string;
   images: string[]; // Array de URLs de las imágenes
+  sellerName?: string; // Nombre del vendedor (opcional)
+  isActive: boolean; // Indica si el producto está activo/disponible
   createdAt: string;
   updatedAt: string;
 }
