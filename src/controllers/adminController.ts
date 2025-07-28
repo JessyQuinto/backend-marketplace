@@ -1,51 +1,68 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { db } from '../config/firebase';
+import { AuthenticatedRequest } from '../types/express'; // Usar AuthenticatedRequest
 
+// Función helper para verificar la base de datos y estandarizar la respuesta de error
 const checkDb = (res: Response) => {
     if (!db) {
-        res.status(503).json({ success: false, error: 'Servicio no disponible. La configuración de Firebase no está completa.', code: 'SERVICE_UNAVAILABLE' });
+        res.status(503).json({ 
+            success: false, 
+            error: 'Servicio no disponible. La configuración de Firebase no está completa.', 
+            code: 'SERVICE_UNAVAILABLE' 
+        });
         return false;
     }
     return true;
-}
+};
 
-export const listUsers = async (req: Request, res: Response) => {
+// Función helper para actualizar el estado del usuario y enviar respuesta
+const updateUserStatus = async (res: Response, userId: string, statusChange: object, successMessage: string, errorCode: string) => {
+    if (!checkDb(res)) return;
+    
+    try {
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            return res.status(404).json({ success: false, error: 'El usuario no existe.', code: 'USER_NOT_FOUND' });
+        }
+
+        await userRef.update({ ...statusChange, updatedAt: new Date().toISOString() });
+        
+        res.status(200).json({ success: true, message: successMessage });
+    } catch (error) {
+        console.error(`Error en ${errorCode}:`, error);
+        res.status(500).json({ success: false, error: `Error al ${successMessage.toLowerCase()}`, code: errorCode });
+    }
+};
+
+export const listUsers = async (req: AuthenticatedRequest, res: Response) => {
     if (!checkDb(res)) return;
     try {
         const usersSnapshot = await db.collection('users').get();
-        const users = usersSnapshot.docs.map(doc => doc.data());
+        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         res.status(200).json({ success: true, data: users });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Error al listar usuarios', code: 'LIST_USERS_ERROR' });
+        console.error('Error en listUsers:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener la lista de usuarios.', code: 'LIST_USERS_ERROR' });
     }
 };
 
-export const approveSeller = async (req: Request, res: Response) => {
-    if (!checkDb(res)) return;
-    try {
-        await db.collection('users').doc(req.params.id).update({ isApproved: true });
-        res.status(200).json({ success: true, message: 'Vendedor aprobado' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Error al aprobar vendedor', code: 'APPROVE_SELLER_ERROR' });
-    }
+export const approveSeller = (req: AuthenticatedRequest, res: Response) => {
+    updateUserStatus(res, req.params.id, { isApproved: true }, 'Vendedor aprobado exitosamente.', 'APPROVE_SELLER_ERROR');
 };
 
-export const rejectSeller = async (req: Request, res: Response) => {
-    if (!checkDb(res)) return;
-    try {
-        await db.collection('users').doc(req.params.id).update({ isApproved: false });
-        res.status(200).json({ success: true, message: 'Vendedor rechazado' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Error al rechazar vendedor', code: 'REJECT_SELLER_ERROR' });
-    }
+export const rejectSeller = (req: AuthenticatedRequest, res: Response) => {
+    // Aquí podrías agregar lógica adicional, como marcarlo como "rechazado" en lugar de solo no aprobado
+    updateUserStatus(res, req.params.id, { isApproved: false }, 'Solicitud de vendedor rechazada.', 'REJECT_SELLER_ERROR');
 };
 
-export const suspendUser = async (req: Request, res: Response) => {
-    if (!checkDb(res)) return;
-    res.status(200).json({ success: true, message: 'Usuario suspendido (placeholder)' });
+export const suspendUser = (req: AuthenticatedRequest, res: Response) => {
+    // Firebase Auth tiene su propio estado `disabled`. Sincronizamos nuestro estado con él.
+    // El cambio en Firebase Auth se haría en una función aparte si es necesario.
+    updateUserStatus(res, req.params.id, { suspended: true }, 'Usuario suspendido correctamente.', 'SUSPEND_USER_ERROR');
 };
 
-export const reactivateUser = async (req: Request, res: Response) => {
-    if (!checkDb(res)) return;
-    res.status(200).json({ success: true, message: 'Usuario reactivado (placeholder)' });
+export const reactivateUser = (req: AuthenticatedRequest, res: Response) => {
+    updateUserStatus(res, req.params.id, { suspended: false }, 'Usuario reactivado correctamente.', 'REACTIVATE_USER_ERROR');
 };

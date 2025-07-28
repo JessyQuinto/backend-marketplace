@@ -6,14 +6,16 @@ import {
   getOrders
 } from '../controllers/sellerController';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import { authorizationMiddleware } from '../middlewares/authorizationMiddleware';
+import { authorize } from '../middlewares/authorizationMiddleware'; // Importar el nuevo middleware
 
 const router = Router();
 
-// Simple, correct middleware usage
+// Middleware para todas las rutas de vendedor
 router.use(authMiddleware);
-router.use(authorizationMiddleware(['seller'], true));
+// Solo permite el rol 'seller' y requiere que la cuenta esté aprobada
+router.use(authorize(['seller'], { requireApproved: true }));
 
+// Endpoints para vendedores
 router.get('/products', getProducts);
 router.post('/products', createProduct);
 router.put('/products/:id', updateProduct);

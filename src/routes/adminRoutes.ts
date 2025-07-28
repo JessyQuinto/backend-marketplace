@@ -7,13 +7,15 @@ import {
   reactivateUser
 } from '../controllers/adminController';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import { authorizationMiddleware } from '../middlewares/authorizationMiddleware';
+import { authorize } from '../middlewares/authorizationMiddleware'; // Importar el nuevo middleware
 
 const router = Router();
 
-// Simple, correct middleware usage
+// Aplicar middleware de autenticación a todas las rutas de admin
 router.use(authMiddleware);
-router.use(authorizationMiddleware(['admin']));
+
+// Aplicar middleware de autorización a todas las rutas de admin, solo 'admin' tiene acceso
+router.use(authorize(['admin']));
 
 router.get('/users', listUsers);
 router.put('/users/:id/approve', approveSeller);

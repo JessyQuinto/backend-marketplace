@@ -1,29 +1,44 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../types/express'; // Usaremos un tipo custom para la request
+import { UserRole } from '../models/user';
 
-export const authorizationMiddleware = (roles: Array<'admin' | 'buyer' | 'seller'>, checkApproved = false) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
+interface AuthorizationOptions {
+  requireApproved?: boolean;
+}
+
+/**
+ * Middleware para verificar roles y estado de aprobación de un usuario.
+ * @param allowedRoles - Un array de roles permitidos para acceder al recurso.
+ * @param options - Opciones adicionales como requerir que la cuenta esté aprobada.
+ */
+export const authorize = (allowedRoles: UserRole[], options: AuthorizationOptions = {}) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+
+    if (!user) {
       return res.status(401).json({
         success: false,
-        error: 'No autenticado.',
+        error: 'Autenticación requerida. Inicie sesión para continuar.',
         code: 'UNAUTHENTICATED'
       });
     }
 
-    if (!roles.includes(req.user.role)) {
+    // 1. Validar Rol
+    if (!allowedRoles.includes(user.role)) {
       return res.status(403).json({
         success: false,
-        error: 'No tienes permiso para acceder a este recurso.',
-        code: 'FORBIDDEN'
+        error: 'Acceso denegado. No tienes permiso para realizar esta acción.',
+        code: 'FORBIDDEN_ROLE'
       });
     }
 
-    if (checkApproved && req.user.role === 'seller' && !req.user.isApproved) {
-        return res.status(403).json({
-            success: false,
-            error: 'Tu cuenta de vendedor no ha sido aprobada.',
-            code: 'NOT_APPROVED'
-        });
+    // 2. Validar si el vendedor está aprobado (si es requerido)
+    if (options.requireApproved && user.role === 'seller' && !user.isApproved) {
+      return res.status(403).json({
+        success: false,
+        error: 'Tu cuenta de vendedor está pendiente de aprobación. No puedes acceder a este recurso todavía.',
+        code: 'SELLER_NOT_APPROVED'
+      });
     }
 
     next();

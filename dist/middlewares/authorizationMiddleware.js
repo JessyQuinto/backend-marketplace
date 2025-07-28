@@ -1,31 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorizationMiddleware = void 0;
-const authorizationMiddleware = (roles, checkApproved = false) => {
+exports.authorize = void 0;
+/**
+ * Middleware para verificar roles y estado de aprobación de un usuario.
+ * @param allowedRoles - Un array de roles permitidos para acceder al recurso.
+ * @param options - Opciones adicionales como requerir que la cuenta esté aprobada.
+ */
+const authorize = (allowedRoles, options = {}) => {
     return (req, res, next) => {
-        if (!req.user) {
+        const user = req.user;
+        if (!user) {
             return res.status(401).json({
                 success: false,
-                error: 'No autenticado.',
+                error: 'Autenticación requerida. Inicie sesión para continuar.',
                 code: 'UNAUTHENTICATED'
             });
         }
-        if (!roles.includes(req.user.role)) {
+        // 1. Validar Rol
+        if (!allowedRoles.includes(user.role)) {
             return res.status(403).json({
                 success: false,
-                error: 'No tienes permiso para acceder a este recurso.',
-                code: 'FORBIDDEN'
+                error: 'Acceso denegado. No tienes permiso para realizar esta acción.',
+                code: 'FORBIDDEN_ROLE'
             });
         }
-        if (checkApproved && req.user.role === 'seller' && !req.user.isApproved) {
+        // 2. Validar si el vendedor está aprobado (si es requerido)
+        if (options.requireApproved && user.role === 'seller' && !user.isApproved) {
             return res.status(403).json({
                 success: false,
-                error: 'Tu cuenta de vendedor no ha sido aprobada.',
-                code: 'NOT_APPROVED'
+                error: 'Tu cuenta de vendedor está pendiente de aprobación. No puedes acceder a este recurso todavía.',
+                code: 'SELLER_NOT_APPROVED'
             });
         }
         next();
     };
 };
-exports.authorizationMiddleware = authorizationMiddleware;
+exports.authorize = authorize;
 //# sourceMappingURL=authorizationMiddleware.js.map
