@@ -6,8 +6,18 @@ export const addToCartSchema = Joi.object({
   quantity: Joi.number().integer().min(1).required(),
 });
 
-// DTO para el item del carrito
+// Esquema para el proceso de checkout
+export const checkoutSchema = Joi.object({
+  shippingAddress: Joi.string().min(10).max(200).required(),
+});
+
+// --- DTOs ---
+
 export type AddToCartDto = {
   productId: string;
   quantity: number;
+};
+
+export type CheckoutDto = {
+  shippingAddress: string;
 };

@@ -3,7 +3,7 @@ import { addToCart, checkout, getOrders } from '../controllers/buyerController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { authorize } from '../middlewares/authorizationMiddleware';
 import { validateBody } from '../middlewares/validationMiddleware';
-import { addToCartSchema } from '../validators/buyer.validator';
+import { addToCartSchema, checkoutSchema } from '../validators/buyer.validator';
 
 const router = Router();
 
@@ -15,7 +15,9 @@ router.use(authorize(['buyer']));
 // POST /api/buyer/cart/add - Añadir al carrito (con validación)
 router.post('/cart/add', validateBody(addToCartSchema), addToCart);
 
-router.post('/checkout', checkout);
+// POST /api/buyer/checkout - Procesar la compra (con validación)
+router.post('/checkout', validateBody(checkoutSchema), checkout);
+
 router.get('/orders', getOrders);
 
 export default router;
