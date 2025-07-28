@@ -1,6 +1,13 @@
 // Definimos y exportamos el tipo UserRole para poder usarlo en otros archivos.
 export type UserRole = 'buyer' | 'seller' | 'admin';
 
+// Interface para un item individual dentro del carrito
+export interface CartItem {
+  productId: string;
+  quantity: number;
+  addedAt: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -14,4 +21,5 @@ export interface UserProfile {
   createdAt: string;
   updatedAt?: string;
   suspended?: boolean;
+  cart?: CartItem[]; // <-- Campo para el carrito de compras
 }

@@ -1,58 +1,95 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 import { db } from '../config/firebase';
+import { CreateProductDto, UpdateProductDto } from '../validators/product.validator';
+import { Product } from '../models/product';
 
-// Placeholder para la lógica de productos y órdenes del vendedor
-// En una implementación real, aquí iría la lógica de base de datos.
+const productsCollection = db.collection('products');
 
 export const getProducts = async (req: AuthenticatedRequest, res: Response) => {
-    // El ID del vendedor se obtiene del token, asegurando que solo pueda ver sus propios productos.
     const sellerId = req.user.id;
-    
-    // Lógica para buscar productos del vendedor con ID sellerId...
-    
-    res.status(200).json({
-        success: true,
-        message: `Obteniendo productos para el vendedor ${sellerId} (implementación pendiente).`,
-        data: [] 
-    });
+
+    try {
+        const snapshot = await productsCollection.where('sellerId', '==', sellerId).get();
+        
+        if (snapshot.empty) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
+        const products: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        
+        res.status(200).json({ success: true, data: products });
+    } catch (error) {
+        console.error('Error en getProducts:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener los productos.', code: 'GET_PRODUCTS_ERROR' });
+    }
 };
 
 export const createProduct = async (req: AuthenticatedRequest, res: Response) => {
     const sellerId = req.user.id;
-    const productData = req.body;
+    const productData: CreateProductDto = req.body;
 
-    // Lógica para crear un producto asociado al sellerId...
+    const newProduct: Omit<Product, 'id'> = {
+        ...productData,
+        sellerId: sellerId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
 
-    res.status(201).json({
-        success: true,
-        message: `Producto creado para el vendedor ${sellerId} (implementación pendiente).`,
-        data: { productId: 'new-product-id', ...productData }
-    });
+    try {
+        const docRef = await productsCollection.add(newProduct);
+        res.status(201).json({ 
+            success: true, 
+            message: 'Producto creado exitosamente.', 
+            data: { id: docRef.id, ...newProduct } 
+        });
+    } catch (error) {
+        console.error('Error en createProduct:', error);
+        res.status(500).json({ success: false, error: 'Error al crear el producto.', code: 'CREATE_PRODUCT_ERROR' });
+    }
 };
 
 export const updateProduct = async (req: AuthenticatedRequest, res: Response) => {
     const sellerId = req.user.id;
     const { id: productId } = req.params;
-    const productData = req.body;
+    const productData: UpdateProductDto = req.body;
 
-    // Lógica para verificar que el producto con productId pertenece al sellerId y luego actualizarlo...
+    try {
+        const productRef = productsCollection.doc(productId);
+        const doc = await productRef.get();
 
-    res.status(200).json({
-        success: true,
-        message: `Producto con ID ${productId} actualizado por el vendedor ${sellerId} (implementación pendiente).`,
-        data: { productId, ...productData }
-    });
+        if (!doc.exists) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado.', code: 'PRODUCT_NOT_FOUND' });
+        }
+
+        const product = doc.data() as Product;
+
+        // **Comprobación de Seguridad Crucial**
+        if (product.sellerId !== sellerId) {
+            return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permiso para modificar este producto.', code: 'FORBIDDEN_PRODUCT_ACCESS' });
+        }
+
+        await productRef.update({
+            ...productData,
+            updatedAt: new Date().toISOString(),
+        });
+
+        res.status(200).json({ success: true, message: 'Producto actualizado exitosamente.' });
+    } catch (error) {
+        console.error('Error en updateProduct:', error);
+        res.status(500).json({ success: false, error: 'Error al actualizar el producto.', code: 'UPDATE_PRODUCT_ERROR' });
+    }
 };
 
 export const getOrders = async (req: AuthenticatedRequest, res: Response) => {
     const sellerId = req.user.id;
     
-    // Lógica para buscar órdenes asociadas a los productos del vendedor con ID sellerId...
+    // La lógica de órdenes es más compleja y la dejaremos pendiente por ahora.
+    // Requeriría consultar órdenes basadas en los productos que pertenecen al vendedor.
 
     res.status(200).json({
         success: true,
-        message: `Obteniendo órdenes para el vendedor ${sellerId} (implementación pendiente).`,
+        message: `La obtención de órdenes para el vendedor ${sellerId} todavía está pendiente de implementación.`,
         data: []
     });
 };
