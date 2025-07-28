@@ -5,7 +5,9 @@
   channel = "stable-23.11"; # or "unstable"
   # Use https://search.nixos.org/packages to find packages
   packages = [
-    pkgs.nodejs_20
+    pkgs.nodejs_20,
+    # Adding git-filter-repo to clean the git history
+    pkgs.git-filter-repo
   ];
   # Sets environment variables in the workspace
   env = {};
@@ -19,7 +21,7 @@
         npm-install = "npm ci --no-audit --prefer-offline --no-progress --timing";
       };
       # Runs when a workspace is (re)started
-      onStart= {
+      onStart = {
         run-server = "npm run dev";
       };
     };
