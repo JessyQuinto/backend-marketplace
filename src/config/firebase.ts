@@ -22,9 +22,11 @@ if (!getApps().length) {
             credential: credential.cert(serviceAccount),
         });
     } else {
-        console.log('No service account key found. Using default credentials or environment variables...');
-        // This will work if GOOGLE_APPLICATION_CREDENTIALS is set or in cloud environments
-        initializeApp();
+        console.log('No service account key found. Using default project for development...');
+        // For development, use the Firebase emulator or a test project
+        initializeApp({
+            projectId: 'demo-marketplace-project' // Demo project ID
+        });
     }
     db = getFirestore();
     auth = getAuth();

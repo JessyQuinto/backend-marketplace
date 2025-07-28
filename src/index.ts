@@ -46,6 +46,46 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Ruta de bienvenida
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: '🛒 Backend Marketplace API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      public: [
+        'GET /api/products',
+        'GET /api/products/:id'
+      ],
+      authenticated: [
+        'POST /api/auth/verify-token',
+        'GET /api/users/profile',
+        'PUT /api/users/profile',
+        'POST /api/users/register-seller'
+      ],
+      buyer: [
+        'POST /api/buyer/cart/add',
+        'POST /api/buyer/checkout',
+        'GET /api/buyer/orders'
+      ],
+      seller: [
+        'GET /api/seller/products',
+        'POST /api/seller/products',
+        'PUT /api/seller/products/:id',
+        'GET /api/seller/orders'
+      ],
+      admin: [
+        'GET /api/admin/users',
+        'PUT /api/admin/users/:id/approve',
+        'PUT /api/admin/users/:id/reject',
+        'PUT /api/admin/users/:id/suspend',
+        'PUT /api/admin/users/:id/reactivate'
+      ]
+    }
+  });
+});
+
 // --- Registro de Rutas ---
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);

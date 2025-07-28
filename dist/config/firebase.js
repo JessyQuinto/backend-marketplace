@@ -47,9 +47,11 @@ if (!(0, app_1.getApps)().length) {
         });
     }
     else {
-        console.log('No service account key found. Using default credentials or environment variables...');
-        // This will work if GOOGLE_APPLICATION_CREDENTIALS is set or in cloud environments
-        (0, app_1.initializeApp)();
+        console.log('No service account key found. Using default project for development...');
+        // For development, use the Firebase emulator or a test project
+        (0, app_1.initializeApp)({
+            projectId: 'demo-marketplace-project' // Demo project ID
+        });
     }
     exports.db = db = (0, firestore_1.getFirestore)();
     exports.auth = auth = (0, auth_1.getAuth)();
