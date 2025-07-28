@@ -1,24 +1,9 @@
 import { Response } from 'express';
 import { db } from '../config/firebase';
-import { AuthenticatedRequest } from '../types/express'; // Usar AuthenticatedRequest
-
-// Función helper para verificar la base de datos y estandarizar la respuesta de error
-const checkDb = (res: Response) => {
-    if (!db) {
-        res.status(503).json({ 
-            success: false, 
-            error: 'Servicio no disponible. La configuración de Firebase no está completa.', 
-            code: 'SERVICE_UNAVAILABLE' 
-        });
-        return false;
-    }
-    return true;
-};
+import { AuthenticatedRequest } from '../types/express';
 
 // Función helper para actualizar el estado del usuario y enviar respuesta
 const updateUserStatus = async (res: Response, userId: string, statusChange: object, successMessage: string, errorCode: string) => {
-    if (!checkDb(res)) return;
-    
     try {
         const userRef = db.collection('users').doc(userId);
         const userDoc = await userRef.get();
@@ -37,7 +22,6 @@ const updateUserStatus = async (res: Response, userId: string, statusChange: obj
 };
 
 export const listUsers = async (req: AuthenticatedRequest, res: Response) => {
-    if (!checkDb(res)) return;
     try {
         const usersSnapshot = await db.collection('users').get();
         const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -53,13 +37,10 @@ export const approveSeller = (req: AuthenticatedRequest, res: Response) => {
 };
 
 export const rejectSeller = (req: AuthenticatedRequest, res: Response) => {
-    // Aquí podrías agregar lógica adicional, como marcarlo como "rechazado" en lugar de solo no aprobado
     updateUserStatus(res, req.params.id, { isApproved: false }, 'Solicitud de vendedor rechazada.', 'REJECT_SELLER_ERROR');
 };
 
 export const suspendUser = (req: AuthenticatedRequest, res: Response) => {
-    // Firebase Auth tiene su propio estado `disabled`. Sincronizamos nuestro estado con él.
-    // El cambio en Firebase Auth se haría en una función aparte si es necesario.
     updateUserStatus(res, req.params.id, { suspended: true }, 'Usuario suspendido correctamente.', 'SUSPEND_USER_ERROR');
 };
 

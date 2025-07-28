@@ -1,38 +1,24 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 import { db } from '../config/firebase';
+import { UpdateProfileDto, RegisterSellerDto } from '../validators/user.validator';
 
 export const getProfile = (req: AuthenticatedRequest, res: Response) => {
-    // El middleware de autenticación ya ha cargado el perfil del usuario.
-    // Simplemente lo devolvemos.
+    // Gracias al authMiddleware, req.user está garantizado y correctamente tipado.
     res.status(200).json({ success: true, data: req.user });
 };
 
 export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user.id;
-    const { body } = req;
-
-    // --- Medida de Seguridad Crítica ---
-    // Un usuario NUNCA debe poder cambiar su rol, ID, email o estado de aprobación.
-    // Creamos un objeto de datos seguro sin esos campos.
-    const safeUpdateData = {
-        name: body.name,
-        phone: body.phone,
-        address: body.address,
-        businessName: body.businessName,
-        bio: body.bio,
-        updatedAt: new Date().toISOString()
-    };
-    
-    // Filtramos cualquier campo 'undefined' para no sobrescribir datos existentes con nada.
-    Object.keys(safeUpdateData).forEach(key => safeUpdateData[key] === undefined && delete safeUpdateData[key]);
-
-    if (Object.keys(safeUpdateData).length === 1 && safeUpdateData.updatedAt) {
-        return res.status(400).json({ success: false, error: 'No se proporcionaron datos válidos para actualizar.', code: 'BAD_REQUEST' });
-    }
+    // req.body ahora está fuertemente tipado como UpdateProfileDto gracias al middleware.
+    // No hay campos inseguros como 'role' o 'isApproved'.
+    const updateData: UpdateProfileDto = req.body;
 
     try {
-        await db.collection('users').doc(userId).update(safeUpdateData);
+        await db.collection('users').doc(userId).update({
+            ...updateData,
+            updatedAt: new Date().toISOString(),
+        });
         res.status(200).json({ success: true, message: 'Perfil actualizado exitosamente.' });
     } catch (error) {
         console.error('Error en updateProfile:', error);
@@ -43,7 +29,6 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
 export const registerSeller = async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user;
 
-    // Verificar que el usuario no sea ya un vendedor o un administrador.
     if (user.role === 'seller') {
         return res.status(400).json({ success: false, error: 'Ya eres un vendedor.', code: 'ALREADY_SELLER' });
     }
@@ -51,22 +36,16 @@ export const registerSeller = async (req: AuthenticatedRequest, res: Response) =
         return res.status(400).json({ success: false, error: 'Un administrador no puede registrarse como vendedor.', code: 'ADMIN_CANNOT_BE_SELLER' });
     }
 
-    // Datos para la solicitud de vendedor
-    const sellerApplicationData = {
-        role: 'seller',
-        isApproved: false, // La aprobación es manual por parte del admin
-        businessName: req.body.businessName,
-        bio: req.body.bio,
-        updatedAt: new Date().toISOString()
-    };
-    
-    // Validar que se envíen los campos mínimos
-    if (!sellerApplicationData.businessName) {
-         return res.status(400).json({ success: false, error: 'El nombre del negocio es requerido.', code: 'BAD_REQUEST' });
-    }
+    // req.body está garantizado y tipado como RegisterSellerDto.
+    const sellerApplicationData: RegisterSellerDto = req.body;
 
     try {
-        await db.collection('users').doc(user.id).update(sellerApplicationData);
+        await db.collection('users').doc(user.id).update({
+            ...sellerApplicationData,
+            role: 'seller',
+            isApproved: false,
+            updatedAt: new Date().toISOString(),
+        });
         res.status(200).json({ 
             success: true, 
             message: 'Tu solicitud para convertirte en vendedor ha sido enviada. Recibirás una notificación cuando sea revisada.' 

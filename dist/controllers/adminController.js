@@ -2,22 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reactivateUser = exports.suspendUser = exports.rejectSeller = exports.approveSeller = exports.listUsers = void 0;
 const firebase_1 = require("../config/firebase");
-// Función helper para verificar la base de datos y estandarizar la respuesta de error
-const checkDb = (res) => {
-    if (!firebase_1.db) {
-        res.status(503).json({
-            success: false,
-            error: 'Servicio no disponible. La configuración de Firebase no está completa.',
-            code: 'SERVICE_UNAVAILABLE'
-        });
-        return false;
-    }
-    return true;
-};
 // Función helper para actualizar el estado del usuario y enviar respuesta
 const updateUserStatus = async (res, userId, statusChange, successMessage, errorCode) => {
-    if (!checkDb(res))
-        return;
     try {
         const userRef = firebase_1.db.collection('users').doc(userId);
         const userDoc = await userRef.get();
@@ -33,8 +19,6 @@ const updateUserStatus = async (res, userId, statusChange, successMessage, error
     }
 };
 const listUsers = async (req, res) => {
-    if (!checkDb(res))
-        return;
     try {
         const usersSnapshot = await firebase_1.db.collection('users').get();
         const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -51,13 +35,10 @@ const approveSeller = (req, res) => {
 };
 exports.approveSeller = approveSeller;
 const rejectSeller = (req, res) => {
-    // Aquí podrías agregar lógica adicional, como marcarlo como "rechazado" en lugar de solo no aprobado
     updateUserStatus(res, req.params.id, { isApproved: false }, 'Solicitud de vendedor rechazada.', 'REJECT_SELLER_ERROR');
 };
 exports.rejectSeller = rejectSeller;
 const suspendUser = (req, res) => {
-    // Firebase Auth tiene su propio estado `disabled`. Sincronizamos nuestro estado con él.
-    // El cambio en Firebase Auth se haría en una función aparte si es necesario.
     updateUserStatus(res, req.params.id, { suspended: true }, 'Usuario suspendido correctamente.', 'SUSPEND_USER_ERROR');
 };
 exports.suspendUser = suspendUser;
