@@ -56,8 +56,8 @@ export const listUsers = async (req: AuthenticatedRequest, res: Response) => {
 export const getPendingSellers = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const pendingSellersSnapshot = await usersCollection
-            .where('role', '==', 'vendedor')
-            .where('isApproved', '==', false)
+            .where('role', '==', 'pending_vendor')
+            .orderBy('createdAt', 'desc')
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -95,7 +95,7 @@ export const approveSeller = async (req: AuthenticatedRequest, res: Response) =>
 
         const userData = userDoc.data() as UserProfile;
         
-        if (userData.role !== 'vendedor') {
+        if (userData.role !== 'pending_vendor') {
             return res.status(400).json({ 
                 success: false, 
                 error: 'Solo se pueden aprobar usuarios con rol de vendedor.', 
@@ -112,6 +112,7 @@ export const approveSeller = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         await userRef.update({ 
+            role: 'seller',
             isApproved: true, 
             approvedAt: new Date().toISOString(),
             approvedBy: req.user.id,
@@ -158,10 +159,10 @@ export const rejectSeller = async (req: AuthenticatedRequest, res: Response) => 
 
         const userData = userDoc.data() as UserProfile;
         
-        if (userData.role !== 'vendedor') {
+        if (userData.role !== 'pending_vendor') {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Solo se pueden rechazar usuarios con rol de vendedor.', 
+                error: 'Solo se pueden rechazar usuarios con rol de vendedor pendiente.', 
                 code: 'INVALID_USER_ROLE' 
             });
         }
@@ -477,7 +478,7 @@ export const getSystemStats = async (req: AuthenticatedRequest, res: Response) =
         const [usersSnapshot, productsSnapshot, pendingSellersSnapshot, reportedProductsSnapshot] = await Promise.all([
             usersCollection.get(),
             productsCollection.get(),
-            usersCollection.where('role', '==', 'vendedor').where('isApproved', '==', false).get(),
+            usersCollection.where('role', '==', 'pending_vendor').get(),
             productsCollection.where('isReported', '==', true).get()
         ]);
 

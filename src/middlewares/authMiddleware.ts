@@ -54,8 +54,8 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
         id: decodedToken.uid,
         email: decodedToken.email || '',
         name: decodedToken.name || decodedToken.email?.split('@')[0] || 'Usuario',
-        role: 'comprador' as const,
-        isApproved: true, // Los compradores se aprueban automáticamente
+        role: 'buyer' as const, // Cambiado de 'comprador' a 'buyer'
+        isApproved: true, // Los buyers se aprueban automáticamente
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

@@ -21,7 +21,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // Aplicar middleware de autorización - solo vendedores aprobados
-router.use(authorize(['vendedor'], { requireApproved: true }));
+router.use(authorize(['seller'], { requireApproved: true }));
 
 // ===== RUTAS DE PRODUCTOS =====
 

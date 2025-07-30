@@ -5,7 +5,7 @@ export const verifyToken = (req: AuthenticatedRequest, res: Response) => {
     console.log('✅ AuthController: Token verificado exitosamente');
     console.log('👤 Usuario autenticado:', req.user.email);
     
-    // If the middleware passed, the user is authenticated.
+    // Devolver el perfil completo del usuario
     res.status(200).json({
         success: true,
         data: req.user
@@ -21,3 +21,51 @@ export const refreshToken = (req: Request, res: Response) => {
         message: 'El cliente debe refrescar el token usando el SDK de Firebase.'
     });
 }
+
+// Nuevo endpoint para registro (opcional, ya que Firebase Auth maneja el registro)
+export const register = async (req: Request, res: Response) => {
+    try {
+        // Este endpoint es principalmente para sincronización con el backend
+        // El registro real se maneja en Firebase Auth
+        const { userProfile } = req.body;
+        
+        if (!userProfile || !userProfile.id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Perfil de usuario requerido',
+                code: 'MISSING_USER_PROFILE'
+            });
+        }
+
+        // Verificar si el usuario ya existe
+        const existingUser = await db.collection('users').doc(userProfile.id).get();
+        
+        if (existingUser.exists) {
+            return res.status(200).json({
+                success: true,
+                message: 'Usuario ya existe en el sistema',
+                data: existingUser.data()
+            });
+        }
+
+        // Crear el perfil en Firestore
+        await db.collection('users').doc(userProfile.id).set({
+            ...userProfile,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Usuario registrado exitosamente',
+            data: userProfile
+        });
+    } catch (error) {
+        console.error('Error en registro:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            code: 'REGISTRATION_ERROR'
+        });
+    }
+};

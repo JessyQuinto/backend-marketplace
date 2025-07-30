@@ -29,7 +29,7 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response) =>
 export const registerSeller = async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user;
 
-    if (user.role === 'vendedor') {
+    if (user.role === 'seller') {
         return res.status(400).json({ success: false, error: 'Ya eres un vendedor.', code: 'ALREADY_SELLER' });
     }
     if (user.role === 'admin') {
@@ -42,7 +42,7 @@ export const registerSeller = async (req: AuthenticatedRequest, res: Response) =
     try {
         await db.collection('users').doc(user.id).update({
             ...sellerApplicationData,
-            role: 'seller',
+            role: 'pending_vendor', // Cambiado de 'seller' a 'pending_vendor'
             isApproved: false,
             updatedAt: new Date().toISOString(),
         });

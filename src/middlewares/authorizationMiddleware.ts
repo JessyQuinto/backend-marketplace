@@ -33,7 +33,7 @@ export const authorize = (allowedRoles: UserRole[], options: AuthorizationOption
     }
 
     // 2. Validar si el vendedor está aprobado (si es requerido)
-    if (options.requireApproved && user.role === 'vendedor' && !user.isApproved) {
+    if (options.requireApproved && user.role === 'seller' && !user.isApproved) {
       return res.status(403).json({
         success: false,
         error: 'Tu cuenta de vendedor está pendiente de aprobación. No puedes acceder a este recurso todavía.',

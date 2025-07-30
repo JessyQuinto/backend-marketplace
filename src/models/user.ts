@@ -1,5 +1,5 @@
 // Definimos y exportamos el tipo UserRole para poder usarlo en otros archivos.
-export type UserRole = 'comprador' | 'vendedor' | 'admin';
+export type UserRole = 'buyer' | 'seller' | 'admin' | 'pending_vendor';
 
 // Interface para un item individual dentro del carrito
 export interface CartItem {
