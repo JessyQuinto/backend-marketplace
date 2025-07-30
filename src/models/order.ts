@@ -6,6 +6,9 @@ export interface OrderItem {
   price: number;     // Precio al momento de la compra
   quantity: number;
   image: string;     // Una imagen principal para mostrar en el historial
+  status?: OrderStatus; // Estado específico del item (para seguimiento del vendedor)
+  trackingNumber?: string; // Número de seguimiento del envío
+  updatedAt?: string; // Fecha de última actualización del item
 }
 
 // Representa el estado de una orden.
