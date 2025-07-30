@@ -27,7 +27,7 @@ const updateProfile = async (req, res) => {
 exports.updateProfile = updateProfile;
 const registerSeller = async (req, res) => {
     const user = req.user;
-    if (user.role === 'seller') {
+    if (user.role === 'vendedor') {
         return res.status(400).json({ success: false, error: 'Ya eres un vendedor.', code: 'ALREADY_SELLER' });
     }
     if (user.role === 'admin') {

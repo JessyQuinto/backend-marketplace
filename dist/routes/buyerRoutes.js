@@ -10,7 +10,7 @@ const router = (0, express_1.Router)();
 // Aplicar middleware de autenticación a todas las rutas
 router.use(authMiddleware_1.authMiddleware);
 // Aplicar middleware de autorización - solo compradores
-router.use((0, authorizationMiddleware_1.authorize)(['buyer']));
+router.use((0, authorizationMiddleware_1.authorize)(['comprador']));
 // ===== RUTAS DEL CARRITO =====
 // GET /api/buyer/cart - Obtener carrito del usuario
 router.get('/cart', buyerController_1.getCart);

@@ -19,7 +19,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // Aplicar middleware de autorización - solo compradores
-router.use(authorize(['buyer']));
+router.use(authorize(['comprador']));
 
 // ===== RUTAS DEL CARRITO =====
 

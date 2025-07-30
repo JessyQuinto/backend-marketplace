@@ -10,7 +10,7 @@ const router = (0, express_1.Router)();
 // Aplicar middleware de autenticación a todas las rutas
 router.use(authMiddleware_1.authMiddleware);
 // Aplicar middleware de autorización - solo vendedores aprobados
-router.use((0, authorizationMiddleware_1.authorize)(['seller'], { requireApproved: true }));
+router.use((0, authorizationMiddleware_1.authorize)(['vendedor'], { requireApproved: true }));
 // ===== RUTAS DE PRODUCTOS =====
 // GET /api/seller/products - Listar productos del vendedor
 router.get('/products', sellerController_1.getProducts);
