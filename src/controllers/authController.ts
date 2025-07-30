@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/express';
 
 export const verifyToken = (req: AuthenticatedRequest, res: Response) => {
+    console.log('✅ AuthController: Token verificado exitosamente');
+    console.log('👤 Usuario autenticado:', req.user.email);
+    
     // If the middleware passed, the user is authenticated.
     res.status(200).json({
         success: true,

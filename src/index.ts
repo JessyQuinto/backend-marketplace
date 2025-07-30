@@ -18,6 +18,7 @@ import { unknownEndpoint } from './middlewares/unknownEndpoint';
 
 // Inicializar Firebase
 import './config/firebase';
+import { db } from './config/firebase'; // Importar db para la prueba
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -25,7 +26,9 @@ const port = process.env.PORT || 3000;
 // Middlewares de seguridad y utilidad
 app.use(cors({
   origin: [
-    'http://localhost:5173',  // Vite dev server
+    'http://localhost:5173',  // Vite dev server (puerto original)
+    'http://localhost:5174',  // Vite dev server (puerto alternativo)
+    'http://localhost:5175',  // Vite dev server (puerto alternativo)
     'http://localhost:3000',  // Posible alternativa
     'http://localhost:5000'   // Posible puerto alternativo
   ],
@@ -84,6 +87,45 @@ app.get('/', (req, res) => {
       ]
     }
   });
+});
+
+// Ruta de prueba para Firestore
+app.get('/test-firestore', async (req, res) => {
+  try {
+    console.log('🧪 Testing Firestore connection...');
+    
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: 'Firestore not initialized'
+      });
+    }
+
+    // Intentar escribir un documento de prueba
+    const testDoc = db.collection('test').doc('connection-test');
+    await testDoc.set({
+      timestamp: new Date().toISOString(),
+      message: 'Connection test successful'
+    });
+
+    // Intentar leer el documento
+    const doc = await testDoc.get();
+    
+    console.log('✅ Firestore test successful');
+    
+    res.json({
+      success: true,
+      message: 'Firestore connection successful',
+      data: doc.data()
+    });
+  } catch (error) {
+    console.error('❌ Firestore test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Firestore connection failed',
+      details: error.message
+    });
+  }
 });
 
 // --- Registro de Rutas ---

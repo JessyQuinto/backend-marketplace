@@ -13,24 +13,34 @@ if (!getApps().length) {
     console.log('Initializing Firebase Admin SDK...');
     
     // Try to load service account key
-    const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+    const serviceAccountPath = path.join(__dirname, 'chocomarketlogin-firebase-adminsdk-fbsvc-e22dcdc42f.json');
     
     if (fs.existsSync(serviceAccountPath)) {
-        console.log('Using local service account key...');
-        const serviceAccount = require('./serviceAccountKey.json');
+        console.log('Using local service account key: chocomarketlogin-firebase-adminsdk-fbsvc-e22dcdc42f.json');
+        const serviceAccount = require('./chocomarketlogin-firebase-adminsdk-fbsvc-e22dcdc42f.json');
         initializeApp({
             credential: credential.cert(serviceAccount),
         });
     } else {
-        console.log('No service account key found. Using default project for development...');
-        // For development, use the Firebase emulator or a test project
+        console.log('No service account key found. Using chocomarketlogin project...');
+        // Use the same project as the frontend
         initializeApp({
-            projectId: 'demo-marketplace-project' // Demo project ID
+            projectId: 'chocomarketlogin' // Same project as frontend
         });
     }
     db = getFirestore();
     auth = getAuth();
-    console.log('Firebase Admin SDK initialized successfully.');
+    console.log('Firebase Admin SDK initialized successfully with project: chocomarketlogin');
+    
+    // Test Firestore connection
+    console.log('🔍 Testing Firestore connection...');
+    db.collection('test').doc('connection-test').get()
+        .then(() => {
+            console.log('✅ Firestore connection successful!');
+        })
+        .catch((error) => {
+            console.error('❌ Firestore connection failed:', error);
+        });
 } else {
      // This case might happen in environments with hot-reloading
     console.log('Firebase Admin SDK already initialized.');
