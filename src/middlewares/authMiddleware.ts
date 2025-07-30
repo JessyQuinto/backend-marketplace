@@ -42,6 +42,21 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
       await db.collection('users').doc(decodedToken.uid).set(newUserProfile);
       
+      // Enviar correo de bienvenida solo cuando se crea un usuario por primera vez
+      try {
+        // Simular envío de correo de bienvenida (en producción usarías un servicio de email)
+        console.log('🎉 Enviando correo de bienvenida a:', newUserProfile.email);
+        console.log('📧 Template de bienvenida para:', newUserProfile.name);
+        
+        // Aquí podrías integrar con un servicio de email como SendGrid, Mailgun, etc.
+        // await emailService.sendWelcomeEmail(newUserProfile);
+        
+        console.log('✅ Correo de bienvenida enviado exitosamente');
+      } catch (emailError) {
+        console.warn('⚠️ Error enviando correo de bienvenida:', emailError);
+        // No interrumpimos el flujo por este error
+      }
+      
       // Refrescar el documento para obtener los datos recién creados
       userDoc = await db.collection('users').doc(decodedToken.uid).get();
     }

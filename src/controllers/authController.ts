@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../types/express';
 
-export const verifyToken = (req: Request, res: Response) => {
+export const verifyToken = (req: AuthenticatedRequest, res: Response) => {
     // If the middleware passed, the user is authenticated.
     res.status(200).json({
         success: true,
