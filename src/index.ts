@@ -29,6 +29,7 @@ app.use(cors({
     'http://localhost:5173',  // Vite dev server (puerto original)
     'http://localhost:5174',  // Vite dev server (puerto alternativo)
     'http://localhost:5175',  // Vite dev server (puerto alternativo)
+    'http://localhost:5176',  // Vite dev server (puerto alternativo)
     'http://localhost:3000',  // Posible alternativa
     'http://localhost:5000'   // Posible puerto alternativo
   ],
